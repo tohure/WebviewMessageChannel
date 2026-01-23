@@ -56,6 +56,7 @@ fun WebViewScreen(modifier: Modifier = Modifier) {
     var port1: WebMessagePort? by remember { mutableStateOf(null) }
     var port2: WebMessagePort? by remember { mutableStateOf(null) }
     val ctx = LocalContext.current
+    var isPortInitialized by remember { mutableStateOf(false) }
 
     Column(
         modifier =
@@ -131,16 +132,21 @@ fun WebViewScreen(modifier: Modifier = Modifier) {
                 val webMessage = WebMessage("Hello from Android", arrayOf(port2))
                 webView?.postWebMessage(webMessage, "*".toUri())
                 Log.d(TAG, "Web Ports: ${webMessage.ports.toString()}")
-                Log.d(TAG, "Web Data: ${webMessage.data.toString()}")
+                Log.d(TAG, "Web Data: ${webMessage.data}")
+                isPortInitialized = true
             },
+            enabled = !isPortInitialized,
             modifier = Modifier.padding(16.dp)
         ) {
             Text("Initialize port")
         }
 
-        Button(onClick = {
-            port1?.postMessage(WebMessage("Android Compose Message"))
-        }) {
+        Button(
+            onClick = {
+                port1?.postMessage(WebMessage("Android Compose Message ${System.currentTimeMillis()}"))
+            },
+            enabled = isPortInitialized
+        ) {
             Text("Send message by Port")
         }
 

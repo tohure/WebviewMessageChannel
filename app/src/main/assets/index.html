@@ -24,12 +24,13 @@
             console.log("arrived source -->"+JSON.stringify(event.source));
             console.log("arrived data -->"+JSON.stringify(event.data));
             console.log("arrived origin -->"+JSON.stringify(event.origin));
+            console.log("arrived event -->"+JSON.stringify(event.ports));
 
             const listItem = document.createElement("li");
             listItem.textContent = event.data;
             list.appendChild(listItem);
 
-            if(event.port[0]) {
+            if(event.ports[0]) {
                 console.log("Port [0] Found");
                 port1 = event.ports[0];
                 port1.onmessage = onMessage;
@@ -45,6 +46,10 @@
         }
 
         function sendMessageToAndroid() {
+            if (!port1) {
+                alert("Port not initialized");
+                return;
+            }
             port1.postMessage("Message received by Webview --> "+new Date().getTime());
         }
     </script>
