@@ -129,7 +129,7 @@ fun WebViewScreen(modifier: Modifier = Modifier) {
                 })
 
                 //Initialization of communication channel
-                val webMessage = WebMessage("Hello from Android", arrayOf(port2))
+                val webMessage = WebMessage("Hello from Android (Port initialized)", arrayOf(port2))
                 webView?.postWebMessage(webMessage, "*".toUri())
                 Log.d(TAG, "Web Ports: ${webMessage.ports.toString()}")
                 Log.d(TAG, "Web Data: ${webMessage.data}")
@@ -143,7 +143,7 @@ fun WebViewScreen(modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
-                port1?.postMessage(WebMessage("Android Compose Message ${System.currentTimeMillis()}"))
+                port1?.postMessage(WebMessage("Message received by Android App --> ${System.currentTimeMillis()}"))
             },
             enabled = isPortInitialized
         ) {
