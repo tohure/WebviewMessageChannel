@@ -21,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,8 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import dev.tohure.webviewmessagechannel.ui.theme.WebviewMessageChannelTheme
+import java.io.BufferedReader
 
 const val TAG = "tohure-log"
+private const val BASE_URL = "https://app.assets.android"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,10 +61,24 @@ fun WebViewScreen(modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
     var isPortInitialized by remember { mutableStateOf(false) }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            //Free up ports to prevent memory leaks or security vulnerabilities
+            port1?.close()
+            port2?.close()
+
+            //Clean webview
+            webView?.apply {
+                stopLoading()
+                destroy()
+            }
+        }
+    }
+
     Column(
         modifier =
-            modifier
-                .fillMaxSize(),
+        modifier
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AndroidView(
@@ -102,7 +119,8 @@ fun WebViewScreen(modifier: Modifier = Modifier) {
                         }
                     }
 
-                    loadUrl("file:///android_asset/index.html")
+                    val html = ctx.assets.open("index.html").bufferedReader().use(BufferedReader::readText)
+                    loadDataWithBaseURL(BASE_URL, html, "text/html", "UTF-8", null)
                 }
             }, update = { webViewInstance ->
                 webView = webViewInstance
@@ -130,7 +148,7 @@ fun WebViewScreen(modifier: Modifier = Modifier) {
 
                 //Initialization of communication channel
                 val webMessage = WebMessage("Hello from Android (Port initialized)", arrayOf(port2))
-                webView?.postWebMessage(webMessage, "*".toUri())
+                webView?.postWebMessage(webMessage, BASE_URL.toUri())
                 Log.d(TAG, "Web Ports: ${webMessage.ports.toString()}")
                 Log.d(TAG, "Web Data: ${webMessage.data}")
                 isPortInitialized = true
