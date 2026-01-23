@@ -101,7 +101,7 @@ fun WebViewScreen(modifier: Modifier = Modifier) {
                         }
                     }
 
-                    loadUrl("https://rpp.pe")
+                    loadUrl("file:///android_asset/index.html")
                 }
             }, update = { webViewInstance ->
                 webView = webViewInstance
@@ -139,7 +139,7 @@ fun WebViewScreen(modifier: Modifier = Modifier) {
         }
 
         Button(onClick = {
-            port1?.postMessage(WebMessage(""))
+            port1?.postMessage(WebMessage("Android Compose Message"))
         }) {
             Text("Send message by Port")
         }

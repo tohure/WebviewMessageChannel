@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebMessage Example</title>
+</head>
+<body>
+    <h1>WebMessage Example</h1>
+    <button onclick="sendMessageToAndroid()">Send Message to Android</button>
+    <p>This page expects to receive messages from an Android app</p>
+    <ul></ul>
+    <script>
+        console.log("tohure web rendering");
+        const list = document.querySelector("ul");
+
+        let port1;
+
+        //Listen for the initial port transfer message
+        window.addEventListener("message", initPort);
+
+        //Setup transferred port
+        function initPort(event) {
+            console.log("arrived source -->"+JSON.stringify(event.source));
+            console.log("arrived data -->"+JSON.stringify(event.data));
+            console.log("arrived origin -->"+JSON.stringify(event.origin));
+
+            const listItem = document.createElement("li");
+            listItem.textContent = event.data;
+            list.appendChild(listItem);
+
+            if(event.port[0]) {
+                console.log("Port [0] Found");
+                port1 = event.ports[0];
+                port1.onmessage = onMessage;
+            }
+        }
+
+        //Handle messages received on port0
+        function onMessage(event) {
+            console.log("Port 1 arrived");
+            const listItem = document.createElement("li");
+            listItem.textContent = event.data;
+            list.appendChild(listItem);
+        }
+
+        function sendMessageToAndroid() {
+            port1.postMessage("Message received by Webview --> "+new Date().getTime());
+        }
+    </script>
+</body>
+</html>
