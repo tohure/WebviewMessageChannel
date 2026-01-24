@@ -5,12 +5,9 @@ import android.util.Log
 import android.webkit.ConsoleMessage
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
-import android.webkit.WebMessage
-import android.webkit.WebMessagePort
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -21,7 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,7 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.net.toUri
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.tohure.webviewmessagechannel.ui.theme.WebviewMessageChannelTheme
 import java.io.BufferedReader
 
@@ -54,36 +51,21 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun WebViewScreen(modifier: Modifier = Modifier) {
+fun WebViewScreen(
+    modifier: Modifier = Modifier,
+    webViewModel: WebViewViewModel = viewModel()
+) {
+    val webViewState by webViewModel.webViewState.collectAsState()
+    val context = LocalContext.current
     var webView: WebView? by remember { mutableStateOf(null) }
-    var port1: WebMessagePort? by remember { mutableStateOf(null) }
-    var port2: WebMessagePort? by remember { mutableStateOf(null) }
-    val ctx = LocalContext.current
-    var isPortInitialized by remember { mutableStateOf(false) }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            //Free up ports to prevent memory leaks or security vulnerabilities
-            port1?.close()
-            port2?.close()
-
-            //Clean webview
-            webView?.apply {
-                stopLoading()
-                destroy()
-            }
-        }
-    }
 
     Column(
-        modifier =
-        modifier
-            .fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AndroidView(
-            factory = { context ->
-                WebView(context).apply {
+            factory = { ctx ->
+                WebView(ctx).apply {
                     settings.javaScriptEnabled = true
                     settings.cacheMode = WebSettings.LOAD_NO_CACHE
 
@@ -93,7 +75,6 @@ fun WebViewScreen(modifier: Modifier = Modifier) {
                         }
 
                         override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
-                            //Console Log from Web to Android
                             Log.d(
                                 TAG,
                                 "${consoleMessage?.message()} -- From line ${consoleMessage?.lineNumber()} of ${consoleMessage?.sourceId()}"
@@ -103,74 +84,46 @@ fun WebViewScreen(modifier: Modifier = Modifier) {
                     }
 
                     webViewClient = object : WebViewClient() {
-                        override fun onPageFinished(
-                            view: WebView?,
-                            url: String?
-                        ) {
+                        override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
-
-                            //Start setting communication with WebMessagePort
-                            if (port1 == null) {
-                                val channel =
-                                    createWebMessageChannel() //Creating two communication ports
-                                port1 = channel[0] //Native channel port
-                                port2 = channel[1] //Web communication channel port
+                            if (view != null) {
+                                webViewModel.createMessageChannel(view)
                             }
                         }
                     }
 
-                    val html = ctx.assets.open("index.html").bufferedReader().use(BufferedReader::readText)
+                    val html =
+                        ctx.assets.open("index.html").bufferedReader().use(BufferedReader::readText)
                     loadDataWithBaseURL(BASE_URL, html, "text/html", "UTF-8", null)
                 }
-            }, update = { webViewInstance ->
+            },
+            update = { webViewInstance ->
                 webView = webViewInstance
-            }, modifier = Modifier.weight(1f)
+            },
+            modifier = Modifier.weight(1f)
         )
 
         Button(
             onClick = {
-                Log.d(TAG, "WebViewScreen: Initializing port...")
-
-                //Setting interface for web listening
-                port1?.setWebMessageCallback(object : WebMessagePort.WebMessageCallback() {
-                    override fun onMessage(
-                        port: WebMessagePort?,
-                        message: WebMessage?
-                    ) {
-                        super.onMessage(port, message)
-
-                        val response = message?.data //Manage web response
-                        Toast.makeText(ctx, "Web response: $response", Toast.LENGTH_SHORT)
-                            .show()
-                        Log.d(TAG, "onMessage: $response")
-                    }
-                })
-
-                //Initialization of communication channel
-                val webMessage = WebMessage("Hello from Android (Port initialized)", arrayOf(port2))
-                webView?.postWebMessage(webMessage, BASE_URL.toUri())
-                Log.d(TAG, "Web Ports: ${webMessage.ports.toString()}")
-                Log.d(TAG, "Web Data: ${webMessage.data}")
-                isPortInitialized = true
+                webViewModel.initializePort(webView, context, BASE_URL)
             },
-            enabled = !isPortInitialized,
+
+            enabled = !webViewState.isPortInitialized,
             modifier = Modifier.padding(16.dp)
         ) {
-            Text("Initialize port")
+            Text("Initialize Communication Port")
         }
 
         Button(
             onClick = {
-                port1?.postMessage(WebMessage("Message received by Android App --> ${System.currentTimeMillis()}"))
+                webViewModel.sendMessageToWeb()
             },
-            enabled = isPortInitialized
+            enabled = webViewState.isPortInitialized
         ) {
             Text("Send message by Port")
         }
-
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

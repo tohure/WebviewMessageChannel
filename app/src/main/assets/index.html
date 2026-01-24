@@ -47,7 +47,7 @@
 
         function sendMessageToAndroid() {
             if (!port1) {
-                alert("Port not initialized");
+                alert("Please first initialize the communication port");
                 return;
             }
             port1.postMessage("Message received by Web --> "+new Date().getTime());
