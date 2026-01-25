@@ -8,6 +8,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,6 +19,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,13 +61,20 @@ fun WebViewScreen(
     val context = LocalContext.current
     var webView: WebView? by remember { mutableStateOf(null) }
 
+    LaunchedEffect(key1 = webViewState.lastMessageFromWeb) {
+        webViewState.lastMessageFromWeb?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            webViewModel.onToastMessageShown()
+        }
+    }
+
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AndroidView(
-            factory = { ctx ->
-                WebView(ctx).apply {
+            factory = {
+                WebView(context).apply {
                     settings.javaScriptEnabled = true
                     settings.cacheMode = WebSettings.LOAD_NO_CACHE
 
@@ -93,7 +102,8 @@ fun WebViewScreen(
                     }
 
                     val html =
-                        ctx.assets.open("index.html").bufferedReader().use(BufferedReader::readText)
+                        context.assets.open("index.html").bufferedReader()
+                            .use(BufferedReader::readText)
                     loadDataWithBaseURL(BASE_URL, html, "text/html", "UTF-8", null)
                 }
             },
@@ -105,7 +115,7 @@ fun WebViewScreen(
 
         Button(
             onClick = {
-                webViewModel.initializePort(webView, context, BASE_URL)
+                webViewModel.initializePort(webView, BASE_URL)
             },
 
             enabled = !webViewState.isPortInitialized,

@@ -1,11 +1,9 @@
 package dev.tohure.webviewmessagechannel
 
-import android.content.Context
 import android.util.Log
 import android.webkit.WebMessage
 import android.webkit.WebMessagePort
 import android.webkit.WebView
-import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +30,7 @@ class WebViewViewModel : ViewModel() {
         return channel
     }
 
-    fun initializePort(webView: WebView?, context: Context, baseUrl: String) {
+    fun initializePort(webView: WebView?, baseUrl: String) {
         Log.d(TAG, "WebViewViewModel: Initializing port...")
 
         port1?.setWebMessageCallback(object : WebMessagePort.WebMessageCallback() {
@@ -40,14 +38,21 @@ class WebViewViewModel : ViewModel() {
                 super.onMessage(port, message)
                 val response = message?.data
                 Log.d(TAG, "onMessage: $response")
-                webViewState.update { it.copy(lastMessageFromWeb = response) }
-                Toast.makeText(context, "Web response: $response", Toast.LENGTH_SHORT).show()
+                webViewState.update {
+                    it.copy(
+                        lastMessageFromWeb = "Web response: $response"
+                    )
+                }
             }
         })
 
         val webMessage = WebMessage("Hello from Android (Port initialized)", arrayOf(port2))
         webView?.postWebMessage(webMessage, baseUrl.toUri())
         webViewState.update { it.copy(isPortInitialized = true) }
+    }
+
+    fun onToastMessageShown() {
+        webViewState.update { it.copy(lastMessageFromWeb = null) }
     }
 
     fun sendMessageToWeb() {
