@@ -27,14 +27,19 @@
             console.log("arrived event -->"+JSON.stringify(event.ports));
 
             const listItem = document.createElement("li");
-            listItem.textContent = event.data;
-            list.appendChild(listItem);
-
-            if(event.ports[0]) {
-                console.log("Port [0] Found");
-                port1 = event.ports[0];
-                port1.onmessage = onMessage;
+            let portStatus = "Port not found";
+            if(event.data === "token_xyz-ultra-secret") {
+                //Inform the user (web) of successful initialization
+                portStatus = "Port received from Android (Correct)";
+                if(event.ports[0]) {
+                    console.log("Port [0] Found");
+                    port1 = event.ports[0];
+                    port1.onmessage = onMessage;
+                }
             }
+
+            listItem.textContent = portStatus;
+            list.appendChild(listItem);
         }
 
         //Handle messages received on port0

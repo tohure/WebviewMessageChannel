@@ -46,7 +46,7 @@ class WebViewViewModel : ViewModel() {
             }
         })
 
-        val webMessage = WebMessage("Hello from Android (Port initialized)", arrayOf(port2))
+        val webMessage = WebMessage("token_xyz-ultra-secret", arrayOf(port2))
         webView?.postWebMessage(webMessage, baseUrl.toUri())
         webViewState.update { it.copy(isPortInitialized = true) }
     }

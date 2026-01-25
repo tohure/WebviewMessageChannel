@@ -95,9 +95,7 @@ fun WebViewScreen(
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
-                            if (view != null) {
-                                webViewModel.createMessageChannel(view)
-                            }
+                            view?.let { webViewModel.createMessageChannel(it) }
                         }
                     }
 
@@ -117,7 +115,6 @@ fun WebViewScreen(
             onClick = {
                 webViewModel.initializePort(webView, BASE_URL)
             },
-
             enabled = !webViewState.isPortInitialized,
             modifier = Modifier.padding(16.dp)
         ) {
