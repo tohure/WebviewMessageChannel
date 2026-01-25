@@ -6,9 +6,13 @@ import android.webkit.WebMessagePort
 import android.webkit.WebView
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class WebViewState(
     val isPortInitialized: Boolean = false,
@@ -36,12 +40,20 @@ class WebViewViewModel : ViewModel() {
         port1?.setWebMessageCallback(object : WebMessagePort.WebMessageCallback() {
             override fun onMessage(port: WebMessagePort?, message: WebMessage?) {
                 super.onMessage(port, message)
-                val response = message?.data
-                Log.d(TAG, "onMessage: $response")
-                webViewState.update {
-                    it.copy(
-                        lastMessageFromWeb = "Web response: $response"
-                    )
+
+                viewModelScope.launch {
+                    val response = message?.data
+                    val processedResult = withContext(Dispatchers.IO) {
+                        Log.d(TAG, "Processing message on thread: ${Thread.currentThread().name}")
+                        response
+                    }
+                    Log.d(TAG, "Updating UI on thread: ${Thread.currentThread().name}")
+                    Log.d(TAG, "onMessage: $processedResult")
+                    webViewState.update {
+                        it.copy(
+                            lastMessageFromWeb = "Web response: $processedResult"
+                        )
+                    }
                 }
             }
         })
