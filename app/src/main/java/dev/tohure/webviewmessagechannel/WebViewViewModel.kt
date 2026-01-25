@@ -43,10 +43,13 @@ class WebViewViewModel : ViewModel() {
 
                 viewModelScope.launch {
                     val response = message?.data
+
+                    //Only if the JSON to be processed is huge, move to other thread
                     val processedResult = withContext(Dispatchers.IO) {
                         Log.d(TAG, "Processing message on thread: ${Thread.currentThread().name}")
                         response
                     }
+
                     Log.d(TAG, "Updating UI on thread: ${Thread.currentThread().name}")
                     Log.d(TAG, "onMessage: $processedResult")
                     webViewState.update {
@@ -58,6 +61,7 @@ class WebViewViewModel : ViewModel() {
             }
         })
 
+        //Be careful, use a more realistic token, starting with a secure injection
         val webMessage = WebMessage("token_xyz-ultra-secret", arrayOf(port2))
         webView?.postWebMessage(webMessage, baseUrl.toUri())
         webViewState.update { it.copy(isPortInitialized = true) }
