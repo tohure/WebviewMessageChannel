@@ -54,14 +54,14 @@ class WebViewViewModel : ViewModel() {
                     Log.d(TAG, "onMessage: $processedResult")
                     webViewState.update {
                         it.copy(
-                            lastMessageFromWeb = "Web response: $processedResult"
+                            lastMessageFromWeb = processedResult
                         )
                     }
                 }
             }
         })
 
-        //Be careful, use a more realistic token, starting with a secure injection
+        //Be careful, use a more realistic token with a secure injection of it
         val webMessage = WebMessage("token_xyz-ultra-secret", arrayOf(port2))
         webView?.postWebMessage(webMessage, baseUrl.toUri())
         webViewState.update { it.copy(isPortInitialized = true) }

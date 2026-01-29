@@ -4,11 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebMessage Example</title>
+    <style>
+        :root {
+            --color-background: #fef7ff;
+            --color-surface: #e8def8;
+            --color-primary: #6750a4;
+            --color-on-primary: #ffffff;
+            --color-on-surface: #1d1b20;
+            --color-on-surface-variant: #49454f;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-on-surface);
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        h1 {
+            color: var(--color-primary);
+            font-weight: 400;
+        }
+        p {
+            color: var(--color-on-surface-variant);
+            max-width: 600px;
+        }
+        button {
+            background-color: var(--color-primary);
+            color: var(--color-on-primary);
+            border: none;
+            border-radius: 24px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s ease-in-out;
+            margin-top: 16px;
+        }
+        button:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 24px;
+            width: 100%;
+            max-width: 600px;
+        }
+        li {
+            background-color: var(--color-surface);
+            color: var(--color-on-surface);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            text-align: left;
+            font-size: 14px;
+        }
+    </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
     <h1>WebMessage Example</h1>
     <button onclick="sendMessageToAndroid()">Send Message to Android</button>
-    <p>This page expects to receive messages from an Android app</p>
+    <p>This page expects to receive messages from an Android app. Click the button above to send a message back to the native app.</p>
     <ul></ul>
     <script>
         console.log("tohure web rendering");
@@ -42,9 +111,9 @@
             list.appendChild(listItem);
         }
 
-        //Handle messages received on port0
+        //Handle messages received on app port (port0)
         function onMessage(event) {
-            console.log("Port 1 arrived");
+            console.log("App Port arrived");
             const listItem = document.createElement("li");
             listItem.textContent = event.data;
             list.appendChild(listItem);
@@ -55,7 +124,7 @@
                 alert("Please first initialize the communication port");
                 return;
             }
-            port1.postMessage("Message received by Web --> "+new Date().getTime());
+            port1.postMessage("Message from Web site --> "+new Date().getTime());
         }
     </script>
 </body>
