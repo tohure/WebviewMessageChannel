@@ -77,13 +77,16 @@
 <body>
     <h1>WebMessage Example</h1>
     <button onclick="sendMessageToAndroid()">Send Message to Android</button>
-    <p>This page expects to receive messages from an Android app. Click the button above to send a message back to the native app.</p>
+    <p>This page expects to receive messages from an Android app.</p>
     <ul></ul>
     <script>
         console.log("tohure web rendering");
         const list = document.querySelector("ul");
 
-        let port1;
+        //Port we'll receive from mobile app
+        //This is port 2 that we generated in Android with createWebMessageChannel()
+        //and it was sent here through postWebMessage().
+        let appPort;
 
         //Listen for the initial port transfer message
         window.addEventListener("message", initPort);
@@ -102,8 +105,8 @@
                 portStatus = "Port received from Android (Correct)";
                 if(event.ports[0]) {
                     console.log("Port [0] Found");
-                    port1 = event.ports[0];
-                    port1.onmessage = onMessage;
+                    appPort = event.ports[0];
+                    appPort.onmessage = onMessage;
                 }
             }
 
@@ -120,11 +123,11 @@
         }
 
         function sendMessageToAndroid() {
-            if (!port1) {
+            if (!appPort) {
                 alert("Please first initialize the communication port");
                 return;
             }
-            port1.postMessage("Message from Web site --> "+new Date().getTime());
+            appPort.postMessage("Message from Web site --> "+new Date().getTime());
         }
     </script>
 </body>

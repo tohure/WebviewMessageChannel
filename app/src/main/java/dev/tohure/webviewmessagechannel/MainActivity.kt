@@ -36,7 +36,7 @@ import dev.tohure.webviewmessagechannel.ui.theme.WebviewMessageChannelTheme
 import java.io.BufferedReader
 
 const val TAG = "tohure-log"
-private const val BASE_URL = "https://app.assets.android"
+private const val BASE_URL = "https://app.tohure.assets"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
